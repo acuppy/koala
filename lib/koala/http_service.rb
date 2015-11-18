@@ -17,11 +17,12 @@ module Koala
     # Koala's default middleware stack.
     # We encode requests in a Facebook-compatible multipart request,
     # and use whichever adapter has been configured for this application.
-    DEFAULT_MIDDLEWARE = Proc.new do |builder|
-      builder.use Koala::HTTPService::MultipartRequest
-      builder.request :url_encoded
-      builder.adapter Faraday.default_adapter
-    end
+    DEFAULT_MIDDLEWARE = Request::DEFAULT_MIDDLEWARE
+      #Proc.new do |builder|
+      #builder.use Koala::HTTPService::MultipartRequest
+      #builder.request :url_encoded
+      #builder.adapter Faraday.default_adapter
+    #end
 
     # Default servers for Facebook. These are read into the config OpenStruct,
     # and can be overridden via Koala.config.
@@ -48,12 +49,13 @@ module Koala
     # @option options :beta use the beta tier
     # @option options :use_ssl force https, even if not needed
     #
-    # @return a complete server address with protocol
+    # @return a completeserver address with protocol
     def self.server(options = {})
-      server = "#{options[:rest_api] ? Koala.config.rest_server : Koala.config.graph_server}"
-      server.gsub!(Koala.config.host_path_matcher, Koala.config.video_replace) if options[:video]
-      server.gsub!(Koala.config.host_path_matcher, Koala.config.beta_replace) if options[:beta]
-      "#{options[:use_ssl] ? "https" : "http"}://#{server}"
+      Request.new(options).root_url
+      #server = "#{options[:rest_api] ? Koala.config.rest_server : Koala.config.graph_server}"
+      #server.gsub!(Koala.config.host_path_matcher, Koala.config.video_replace) if options[:video]
+      #server.gsub!(Koala.config.host_path_matcher, Koala.config.beta_replace) if options[:beta]
+      #"#{options[:use_ssl] ? "https" : "http"}://#{server}"
     end
 
     # Makes a request directly to Facebook.
