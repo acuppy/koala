@@ -78,7 +78,8 @@ module Koala
       args.merge!({:method => verb}) && verb = "post" if verb != "get" && verb != "post"
 
       # turn all the keys to strings (Faraday has issues with symbols under 1.8.7) and resolve UploadableIOs
-      params = args.inject({}) {|hash, kv| hash[kv.first.to_s] = kv.last.is_a?(UploadableIO) ? kv.last.to_upload_io : kv.last; hash}
+      params = RequestParams.new args
+      #args.inject({}) {|hash, kv| hash[kv.first.to_s] = kv.last.is_a?(UploadableIO) ? kv.last.to_upload_io : kv.last; hash}
 
       # figure out our options for this request
       request_options = {:params => (verb == "get" ? params : {})}.merge(http_options || {}).merge(options)
@@ -87,6 +88,7 @@ module Koala
         ssl = (request_options[:ssl] ||= {})
         ssl[:verify] = true unless ssl.has_key?(:verify)
       end
+      params.merge! http_options, options
 
       # if an api_version is specified and the path does not already contain
       # one, prepend it to the path
