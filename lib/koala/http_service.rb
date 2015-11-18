@@ -95,28 +95,36 @@ module Koala
 
       # if an api_version is specified and the path does not already contain
       # one, prepend it to the path
-      api_version = request_options[:api_version] || Koala.config.api_version
-      if api_version && !path_contains_api_version?(path)
-        begins_with_slash = path[0] == "/"
-        divider = begins_with_slash ? "" : "/"
-        path = "/#{api_version}#{divider}#{path}"
-      end
+      #api_version = request_options[:api_version] || Koala.config.api_version
+      #if api_version && !path_contains_api_version?(path)
+        #begins_with_slash = path[0] == "/"
+        #divider = begins_with_slash ? "" : "/"
+        #path = "/#{api_version}#{divider}#{path}"
+      #end
 
       # set up our Faraday connection
       # we have to manually assign params to the URL or the
-      conn = Faraday.new(server(request_options), faraday_options(request_options), &(faraday_middleware || DEFAULT_MIDDLEWARE))
+      #conn = Faraday.new(server(request_options), faraday_options(request_options), &(faraday_middleware || DEFAULT_MIDDLEWARE))
 
       # remember, all non-GET requests are turned into POSTs -- see the the start of this method
-      if verb == "post" && options[:format] == :json
-        response = conn.post do |req|
-          req.path = path
-          req.headers["Content-Type"] = "application/json"
-          req.body = params.to_json
-          req
-        end
-      else
-        response = conn.send(verb, path, (verb == "post" ? params : {}))
-      end
+
+      request_class = {
+        :get  => GetRequest,
+        :post => PostRequest
+      }.fetch(verb)
+
+      response = request_class.new(path, request_options).perform
+
+      #if verb == "post" && request_options.json?
+        #response = conn.post do |req|
+          #req.path = path
+          #req.headers["Content-Type"] = "application/json"
+          #req.body = params.to_json
+          #req
+        #end
+      #else
+        #response = conn.send(verb, path, (verb == "post" ? params.to_h : {}))
+      #end
 
       # Log URL information
       Koala::Utils.debug "#{verb.upcase}: #{path} params: #{params.inspect}"
