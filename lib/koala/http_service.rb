@@ -82,13 +82,14 @@ module Koala
       #args.inject({}) {|hash, kv| hash[kv.first.to_s] = kv.last.is_a?(UploadableIO) ? kv.last.to_upload_io : kv.last; hash}
 
       # figure out our options for this request
-      request_options = {:params => (verb == "get" ? params : {})}.merge(http_options || {}).merge(options)
-      request_options[:use_ssl] = true if args["access_token"] # require https if there's a token
-      if request_options[:use_ssl]
-        ssl = (request_options[:ssl] ||= {})
-        ssl[:verify] = true unless ssl.has_key?(:verify)
-      end
       params.merge! http_options, options
+      request_options = RequestOptions.new params
+      #request_options = {:params => (verb == "get" ? params.to_h : {})}.merge(http_options || {}).merge(options)
+      #request_options[:use_ssl] = true if args["access_token"] # require https if there's a token
+      #if request_options[:use_ssl]
+        #ssl = (request_options[:ssl] ||= {})
+        #ssl[:verify] = true unless ssl.has_key?(:verify)
+      #end
 
       # if an api_version is specified and the path does not already contain
       # one, prepend it to the path
