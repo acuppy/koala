@@ -128,7 +128,7 @@ module Koala
 
       # Log URL information
       Koala::Utils.debug "#{verb.upcase}: #{path} params: #{params.inspect}"
-      Koala::HTTPService::Response.new(response.status.to_i, response.body, response.headers)
+      Koala::HTTPService::Response.new response
     end
 
     # Encodes a given hash into a query string.
