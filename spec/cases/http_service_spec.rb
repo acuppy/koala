@@ -133,53 +133,44 @@ describe Koala::HTTPService do
   end
 
   describe ".encode_params" do
-    it "returns an empty string if param_hash evaluates to false" do
-      expect(Koala::HTTPService.encode_params(nil)).to eq('')
-    end
+    subject { Koala::HTTPService.encode_params params_hash }
 
-    it "converts values to JSON if the value is not a String" do
-      val = 'json_value'
-      not_a_string = 'not_a_string'
-      allow(not_a_string).to receive(:is_a?).and_return(false)
-      expect(MultiJson).to receive(:dump).with(not_a_string).and_return(val)
+    context 'when params_hash is empty' do
+      let(:params_hash) { nil }
 
-      string = "hi"
-
-      args = {
-        not_a_string => not_a_string,
-        string => string
-      }
-
-      result = Koala::HTTPService.encode_params(args)
-      expect(result.split('&').find do |key_and_val|
-        key_and_val.match("#{not_a_string}=#{val}")
-      end).to be_truthy
-    end
-
-    it "escapes all values" do
-      args = Hash[*(1..4).map {|i| [i.to_s, "Value #{i}($"]}.flatten]
-
-      result = Koala::HTTPService.encode_params(args)
-      result.split('&').each do |key_val|
-        key, val = key_val.split('=')
-        expect(val).to eq(CGI.escape(args[key]))
+      it "converts value to an empty string" do
+        expect(subject).to eq ''
       end
     end
 
-    it "encodes parameters in alphabetical order" do
-      args = {:b => '2', 'a' => '1'}
+    context 'when a value is not a string' do
+      let(:params_hash) do
+        { :not_a_string => 0,
+          'string' => 'hello world' }
+      end
 
-      result = Koala::HTTPService.encode_params(args)
-      expect(result.split('&').map{|key_val| key_val.split('=')[0]}).to eq(['a', 'b'])
+      it "converts values to JSON if the value is not a String" do
+        expect(subject).to eq 'not_a_string=0&string=hello+world'
+      end
     end
 
-    it "converts all keys to Strings" do
-      args = Hash[*(1..4).map {|i| [i, "val#{i}"]}.flatten]
+    context 'when URL values are not valid' do
+      let(:params_hash) do
+        { "1" => "Value 1($" }
+      end
 
-      result = Koala::HTTPService.encode_params(args)
-      result.split('&').each do |key_val|
-        key, val = key_val.split('=')
-        expect(key).to eq(args.find{|key_val_arr| key_val_arr.last == val}.first.to_s)
+      it "escapes all values" do
+        expect(subject).to eq '1=Value+1%28%24'
+      end
+    end
+
+    context 'when params_hash is not in alphabetical order by key' do
+      let(:params_hash) do
+        {:b => '2', :d => '0', 'a' => '1'}
+      end
+
+      it "encodes parameters in alphabetical order" do
+        expect(subject).to eq 'a=1&b=2&d=0'
       end
     end
   end

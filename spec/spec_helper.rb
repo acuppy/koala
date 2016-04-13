@@ -2,6 +2,12 @@
 require "codeclimate-test-reporter"
 CodeClimate::TestReporter.start
 
+if RUBY_VERSION >= '2.0.0'
+  require 'byebug'
+elsif RUBY_VERSION >= '1.9.0'
+  require 'debugger'
+end
+
 # load the library
 require 'koala'
 
